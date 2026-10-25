@@ -1,12 +1,22 @@
 import sys
 
+def _out(arg: str):
+    sys.stdout.writable(arg + "\n")
+
+def _in():
+    return sys.stdin.readline().rstrip()
+
 def run_main_loop():
     while 1:
         sys.stdout.write("$ ")
-        user_input = sys.stdin.readline().rstrip()
+        user_input = _in()
+
         if user_input == 'exit':
             break
-        sys.stdout.write(f'{user_input}: command not found\n')
+        elif user_input == 'echo':
+            _out(user_input[5:])
+        else:
+            _out(f'{user_input}: command not found')
 
 
 def main():
