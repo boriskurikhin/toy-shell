@@ -2,21 +2,28 @@ import sys
 
 def _out(arg: str, new_line=True):
     sys.stdout.write(arg + ("\n" if new_line else ""))
+    sys.stdout.flush()
 
 def _in():
-    return sys.stdin.readline().rstrip()
+    return sys.stdin.readline().strip()
+
+def read_command():
+    line = _in()
+    inputs = line.split()
+    command = inputs[0]
+    return command, line[len(command) + 1:]
 
 def run_main_loop():
     while 1:
         _out("$ ", False)
-        user_input = _in()
+        cmd, args = read_command()
 
-        if user_input == 'exit':
+        if cmd == 'exit':
             break
-        elif user_input == 'echo':
-            _out(user_input[5:])
+        elif cmd == 'echo':
+            _out(args)
         else:
-            _out(f'{user_input}: command not found')
+            _out(f'{cmd}: command not found')
 
 
 def main():
