@@ -1,14 +1,14 @@
 import sys
 
-def _out(arg: str):
-    sys.stdout.writable(arg + "\n")
+def _out(arg: str, new_line=True):
+    sys.stdout.write(arg + ("\n" if new_line else ""))
 
 def _in():
     return sys.stdin.readline().rstrip()
 
 def run_main_loop():
     while 1:
-        sys.stdout.write("$ ")
+        _out("$ ", False)
         user_input = _in()
 
         if user_input == 'exit':
