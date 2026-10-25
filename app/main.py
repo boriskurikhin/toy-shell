@@ -36,11 +36,12 @@ def run_main_loop():
         elif cmd == 'echo':
             _out(args)
         elif cmd == 'type':
-            bult_in = args in __BULTIN_COMAMNDS
-            _out(
-                f'{args} is a shell builtin' 
-                if bult_in else f'{args}: not found'
-            )
+            if args in __BULTIN_COMAMNDS:
+                _out(f'{args} is a shell builtin')
+            elif (cmd_path := find_cmd_in_path(args)):
+                _out(f'{args} is {cmd_path}')
+            else:
+                _out(f'{args}: not found')
         else:
             _out(f'{cmd}: command not found')
 
