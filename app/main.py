@@ -2,49 +2,29 @@ import os
 from pathlib import Path
 import sys
 
-__BULTIN_COMAMNDS = {"echo", "exit", "type"}
+from app.commands import ALL_COMMANDS, sys_in, sys_out
 
-def _out(arg: str, new_line=True):
-    sys.stdout.write(arg + ("\n" if new_line else ""))
-    sys.stdout.flush()
-
-def _in():
-    return sys.stdin.readline().strip()
 
 def read_command():
-    line = _in()
+    line = sys_in()
     inputs = line.split()
     command = inputs[0]
     return command, line[len(command) + 1:]
 
-def find_cmd_in_path(cmd):
-    path = os.environ.get('PATH', '')
-    dirs_to_check = path.split(':')
-    for dir in [d for d in dirs_to_check if Path(d).exists() and Path(d).is_dir()]:
-        files_in_dir = os.listdir(dir)
-        for file_name in files_in_dir:
-            full_path = os.path.join(dir, file_name)
-            if os.access(full_path, os.X_OK) and file_name == cmd:
-                return full_path
-
 def run_main_loop():
     while 1:
-        _out("$ ", False)
+        sys_out("$ ", False)
         cmd, args = read_command()
+        command_found = False
 
-        if cmd == 'exit':
-            break
-        elif cmd == 'echo':
-            _out(args)
-        elif cmd == 'type':
-            if args in __BULTIN_COMAMNDS:
-                _out(f'{args} is a shell builtin')
-            elif (cmd_path := find_cmd_in_path(args)):
-                _out(f'{args} is {cmd_path}')
-            else:
-                _out(f'{args}: not found')
-        else:
-            _out(f'{cmd}: command not found')
+        for cmd in ALL_COMMANDS:
+            if cmd == cmd.name:
+                command_found = True
+                cmd(args)
+                break
+
+        if not command_found:
+            sys_out(f'{cmd}: command not found')
 
 
 def main():
