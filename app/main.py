@@ -1,5 +1,7 @@
 import sys
 
+__BULTIN_COMAMNDS = {"echo", "exit", "type"}
+
 def _out(arg: str, new_line=True):
     sys.stdout.write(arg + ("\n" if new_line else ""))
     sys.stdout.flush()
@@ -22,6 +24,13 @@ def run_main_loop():
             break
         elif cmd == 'echo':
             _out(args)
+        elif cmd == 'type':
+            bult_in = args in __BULTIN_COMAMNDS
+            _out(
+                f'{args} is a shell builtin' 
+                if bult_in 
+                else f'{args}: not found'
+            )
         else:
             _out(f'{cmd}: command not found')
 
