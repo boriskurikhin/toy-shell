@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import sys
 
 __BULTIN_COMAMNDS = {"echo", "exit", "type"}
@@ -19,7 +20,7 @@ def read_command():
 def find_cmd_in_path(cmd):
     path = os.environ.get('PATH', '')
     dirs_to_check = path.split(':')
-    for dir in dirs_to_check:
+    for dir in [d for d in dirs_to_check if Path(d).exists() and Path(d).is_dir()]:
         files_in_dir = os.listdir(dir)
         for file_name in files_in_dir:
             full_path = os.path.join(dir, file_name)
