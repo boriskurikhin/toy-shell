@@ -1,5 +1,4 @@
-from commands import ALL_COMMANDS, CommandExec, sys_in, sys_out
-
+from .commands import ALL_COMMANDS, CommandExec, sys_in, sys_out
 
 def read_command():
     line = sys_in()

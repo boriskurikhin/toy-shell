@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from helpers import ComamndNotFound, find_command_in_path
+from .helpers import ComamndNotFound, find_command_in_path
 
 def sys_out(arg: str, new_line=True):
     sys.stdout.write(arg + ("\n" if new_line else ""))
