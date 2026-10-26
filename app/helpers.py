@@ -37,12 +37,17 @@ def read_command():
     current_arg = ""
     in_quote = False
     in_double_quote = False
+
     special_index = float('-inf')
+    special_rules = None
 
     for i in range(N):
         char = remainder[i]
         if special_index == i:
-            current_arg += char
+            if re.match(special_rules, char):
+                current_arg += char
+            else:
+                current_arg += f'\\{char}'
             continue
         if char == '"':
             if in_quote:
@@ -64,12 +69,10 @@ def read_command():
                 current_arg = ''
             continue
         if char == '\\':
-            # TODO: impl
-            if in_double_quote:
-                continue
             if in_quote:
                 current_arg += char
                 continue
+            special_rules = r'["\\\$\`\n]' if in_double_quote else r'.'
             special_index = i + 1
             continue
 
