@@ -9,7 +9,9 @@ import tty
 def process_input(autocomplete_fn):
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
+
     buffer = []
+    tab_count = 0
 
     try:
         # disables echo
@@ -18,21 +20,30 @@ def process_input(autocomplete_fn):
         while 1:
             ch = sys.stdin.read(1)
             if ch == '\t':
+                tab_count += 1
                 line = ''.join(buffer)
 
                 if (tokens := line.split()):
                     prefix = tokens[-1]
+
                     try:
-                        suffix = autocomplete_fn(prefix)[len(prefix):]
-                        if suffix:
-                            suffix += ' '
-                        buffer.extend(suffix)
-                        sys.stdout.write(suffix)
+                        matches = autocomplete_fn(prefix)
+                        num_matches = len(matches)
+
+                        if num_matches == 1:
+                            single_match = matches[0]
+                            suffix = f'{single_match[len(prefix):]} '
+
+                            buffer.extend(suffix)
+                            sys.stdout.write(suffix)
+                        elif tab_count == 1:
+                            raise ValueError
+                        else:
+                            sys.stdout.write(f'\n{" ".join(matches)}\n$ {"".join(buffer)}')
+
                     except ValueError:
-                        # buffer.extend('\x07')
                         sys.stdout.write('\x07')
 
-                    sys.stdout.flush()
             elif ch in ('\n', '\r'):
                 sys.stdout.write('\n')
                 return ''.join(buffer)
@@ -40,11 +51,10 @@ def process_input(autocomplete_fn):
                 if buffer:
                     buffer.pop()
                     sys.stdout.write('\b \b')
-                sys.stdout.flush()
             elif ch.isprintable():
                 buffer.append(ch)
                 sys.stdout.write(ch)
-                sys.stdout.flush()
+            sys.stdout.flush()
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 

@@ -89,9 +89,11 @@ def complete_command(prefix):
     for c in prefix:
         current_node = current_node.children.get(c, None)
         if not current_node:
-            break
+            raise ValueError('No results found')
         if len(current_node.words) == 1:
-            return current_node.words[0]
+            return [current_node.words[0]]
 
-    # TODO: more than one match
-    raise ValueError('Does not exist')
+    if not current_node.words:
+        raise ValueError('No results found')
+
+    return sorted(current_node.words)
