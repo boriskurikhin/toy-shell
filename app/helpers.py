@@ -29,20 +29,17 @@ def find_command_in_path(cmd, access=os.X_OK):
 def read_command():
     line = sys_in()
 
-    cmd = line[:(f'{line} ').index(' ')]
-    remainder = line[len(cmd) + 1:]
-    N = len(remainder)
-
     args = []
     current_arg = ""
     in_quote = False
     in_double_quote = False
+    N = len(line)
 
     special_index = float('-inf')
     special_rules = None
 
     for i in range(N):
-        char = remainder[i]
+        char = line[i]
         if special_index == i:
             if re.match(special_rules, char):
                 current_arg += char
@@ -82,4 +79,4 @@ def read_command():
         args.append(current_arg)
 
     # TODO: don't check if the quote is closed
-    return cmd, args
+    return args[0], args[1:]
