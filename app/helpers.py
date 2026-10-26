@@ -2,10 +2,7 @@ import os
 from pathlib import Path
 import re
 import sys
-
-def sys_out(arg: str, new_line=True):
-    sys.stdout.write(arg + ("\n" if new_line else ""))
-    sys.stdout.flush()
+import contextlib
 
 def sys_in():
     return sys.stdin.readline().strip()
@@ -80,3 +77,26 @@ def read_command():
 
     # TODO: don't check if the quote is closed
     return args[0], args[1:]
+
+def get_output_files(args, stack: contextlib.ExitStack):
+    stdout = sys.stdout
+    stderr = sys.stderr
+    clean_args = []
+    arg_index = 0
+
+    while arg_index < len(args):
+        arg = args[arg_index]
+        if arg in ('>', '1>', '2>'):
+            if arg_index + 1 >= len(args):
+                raise ValueError('Missing arg. target!')
+
+            file = stack.enter_context(open(args[arg_index + 1], 'w'))
+            if arg == '2>': stderr = file
+            else: stdout = file
+
+            arg_index += 2
+        else:
+            clean_args.append(arg)
+            arg_index += 1
+
+    return stdout, stderr, clean_args
