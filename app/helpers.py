@@ -3,9 +3,47 @@ from pathlib import Path
 import re
 import sys
 import contextlib
+import termios
+import tty
 
-def sys_in():
-    return sys.stdin.readline().strip()
+def process_input(autocomplete_fn):
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    buffer = []
+
+    try:
+        # disables echo
+        tty.setcbreak(fd)
+
+        while 1:
+            ch = sys.stdin.read(1)
+            if ch == '\t':
+                line = ''.join(buffer)
+
+                if (tokens := line.split()):
+                    prefix = tokens[-1]
+                    suffix = autocomplete_fn(prefix)[len(prefix):]
+
+                    if suffix:
+                        suffix += ' '
+
+                    buffer.extend(suffix)
+                    sys.stdout.write(suffix)
+                    sys.stdout.flush()
+            elif ch in ('\n', '\r'):
+                sys.stdout.write('\n')
+                return ''.join(buffer)
+            elif ch in ('\x7f', '\b'):
+                if buffer:
+                    buffer.pop()
+                    sys.stdout.write('\b \b')
+                sys.stdout.flush()
+            elif ch.isprintable():
+                buffer.append(ch)
+                sys.stdout.write(ch)
+                sys.stdout.flush()
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 class ComamndNotFound(Exception):
     pass
@@ -23,8 +61,8 @@ def find_command_in_path(cmd, access=os.X_OK):
                 return full_path
     raise ComamndNotFound
 
-def read_command():
-    line = sys_in()
+def read_command(autocomplete_fn):
+    line = process_input(autocomplete_fn)
 
     args = []
     current_arg = ""
@@ -74,6 +112,9 @@ def read_command():
 
     if current_arg:
         args.append(current_arg)
+
+    if not args:
+        return None, []
 
     # TODO: don't check if the quote is closed
     return args[0], args[1:]

@@ -2,7 +2,7 @@ from contextlib import ExitStack
 import sys
 
 from .helpers import get_output_files, read_command
-from .commands import ALL_COMMANDS, CommandExec
+from .commands import ALL_COMMANDS, CommandExec, complete_command
 
 def run_main_loop():
     exec_cmd = CommandExec()
@@ -11,7 +11,10 @@ def run_main_loop():
         sys.stdout.write("$ ")
         sys.stdout.flush()
 
-        cmd_name, args = read_command()
+        cmd_name, args = read_command(complete_command)
+
+        if not cmd_name:
+            continue
 
         with ExitStack() as stack:
             stdout, stderr, args = get_output_files(args, stack)

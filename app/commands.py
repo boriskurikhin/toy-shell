@@ -6,6 +6,11 @@ import sys
 
 from .helpers import ComamndNotFound, find_command_in_path
 
+class AutoCompleteNode:
+    def __init__(self):
+        self.words = []
+        self.children = {}
+
 class Command(ABC):
     name: str
 
@@ -68,4 +73,27 @@ class CommandType(Command):
             stderr.write(f'{cmd}: not found\n')
 
 ALL_COMMANDS = [CommandExit(), CommandEcho(), CommandType(), CommandPwd(), CommandCd()]
-BUILTIN_COMMANDS = {cmd.name: cmd for cmd in ALL_COMMANDS}
+BUILTIN_COMMANDS, AUTO_COMPLETE = {}, AutoCompleteNode()
+
+for cmd in ALL_COMMANDS:
+    cmd_name = cmd.name
+    BUILTIN_COMMANDS[cmd_name] = cmd
+    current_node = AUTO_COMPLETE
+
+    for char in cmd_name:
+        if char not in current_node.children:
+            current_node.children[char] = AutoCompleteNode()
+        current_node = current_node.children[char]
+        current_node.words.append(cmd_name)
+
+def complete_command(prefix):
+    current_node = AUTO_COMPLETE
+    for c in prefix:
+        current_node = current_node.children.get(c, None)
+        if not current_node:
+            break
+        if len(current_node.words) == 1:
+            return current_node.words[0]
+
+    # TODO: more than one match
+    return ''
