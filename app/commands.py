@@ -32,8 +32,9 @@ class CommandPwd(Command):
 class CommandCd(Command):
     name = "cd"
     def __call__(self, new_dir):
+        home_dir = os.environ.get('HOME')
         try:
-            os.chdir(new_dir)
+            os.chdir(new_dir.replace('~', home_dir))
         except:
             sys_out(f'{self.name}: {new_dir}: No such file or directory')
             pass
