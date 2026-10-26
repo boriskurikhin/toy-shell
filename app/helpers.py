@@ -1,5 +1,14 @@
 import os
 from pathlib import Path
+import re
+import sys
+
+def sys_out(arg: str, new_line=True):
+    sys.stdout.write(arg + ("\n" if new_line else ""))
+    sys.stdout.flush()
+
+def sys_in():
+    return sys.stdin.readline().strip()
 
 class ComamndNotFound(Exception):
     pass
@@ -16,3 +25,34 @@ def find_command_in_path(cmd, access=os.X_OK):
             if os.access(full_path, access) and file_name == cmd:
                 return full_path
     raise ComamndNotFound
+
+def read_command():
+    line = sys_in()
+
+    cmd = line[:(f'{line} ').index(' ')]
+    remainder = line[len(cmd) + 1:]
+    N = len(remainder)
+
+    args = []
+    current_arg = ""
+    in_quote = False
+
+    for i in range(N):
+        char = remainder[i]
+        if char == "'":
+            in_quote ^= 1
+            continue
+        if char == ' ':
+            if in_quote:
+                current_arg += char
+            elif current_arg:
+                args.append(current_arg)
+                current_arg = ''
+            continue
+        current_arg += char
+
+    if current_arg:
+        args.append(current_arg)
+
+    # TODO: don't check if the quote is closed
+    return cmd, args

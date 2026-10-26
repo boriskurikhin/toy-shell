@@ -4,14 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from .helpers import ComamndNotFound, find_command_in_path
-
-def sys_out(arg: str, new_line=True):
-    sys.stdout.write(arg + ("\n" if new_line else ""))
-    sys.stdout.flush()
-
-def sys_in():
-    return sys.stdin.readline().strip()
+from .helpers import ComamndNotFound, find_command_in_path, sys_out
 
 class Command(ABC):
     name: str
@@ -21,8 +14,8 @@ class Command(ABC):
 
 class CommandEcho(Command):
     name = "echo"
-    def __call__(self, to_echo):
-        sys_out(to_echo)
+    def __call__(self, args):
+        sys_out(' '.join(args))
 
 class CommandPwd(Command):
     name = "pwd"
@@ -31,8 +24,10 @@ class CommandPwd(Command):
 
 class CommandCd(Command):
     name = "cd"
-    def __call__(self, new_dir):
+    def __call__(self, args):
+        new_dir = args[0]
         home_dir = os.environ.get('HOME')
+
         try:
             os.chdir(new_dir.replace('~', home_dir))
         except:
@@ -46,11 +41,11 @@ class CommandExit(Command):
 
 class CommandExec(Command):
     name = "__internal_exec__"
-
     def __call__(self, cmd, args):
         cmd_path = find_command_in_path(cmd)
+
         result = subprocess.run(
-            [cmd] + args.split(),
+            [cmd] + args,
             stdout=sys.stdout,
             stderr=sys.stderr
         )
@@ -58,8 +53,8 @@ class CommandExec(Command):
 class CommandType(Command):
     name = "type"
 
-    def __call__(self, cmd):
-        cmd = cmd.strip()
+    def __call__(self, args):
+        cmd = args[0].strip()
         if cmd in BUILTIN_COMMANDS:
             sys_out(f'{cmd} is a shell builtin')
             return
@@ -69,12 +64,5 @@ class CommandType(Command):
         except ComamndNotFound:
             sys_out(f'{cmd}: not found')
 
-ALL_COMMANDS = [
-    CommandExit(),
-    CommandEcho(),
-    CommandType(),
-    CommandPwd(),
-    CommandCd()
-]
-
+ALL_COMMANDS = [CommandExit(), CommandEcho(), CommandType(), CommandPwd(), CommandCd()]
 BUILTIN_COMMANDS = {cmd.name: cmd for cmd in ALL_COMMANDS}

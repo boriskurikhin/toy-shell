@@ -1,10 +1,5 @@
-from .commands import ALL_COMMANDS, CommandExec, sys_in, sys_out
-
-def read_command():
-    line = sys_in()
-    inputs = line.split()
-    command = inputs[0]
-    return command, line[len(command) + 1:]
+from .helpers import read_command
+from .commands import ALL_COMMANDS, CommandExec, sys_out
 
 def run_main_loop():
     exec_cmd = CommandExec()
@@ -28,9 +23,5 @@ def run_main_loop():
         except:
             sys_out(f'{cmd_name}: command not found')
 
-
-def main():
-    run_main_loop()
-
 if __name__ == "__main__":
-    main()
+    run_main_loop()
