@@ -37,9 +37,13 @@ def read_command():
     current_arg = ""
     in_quote = False
     in_double_quote = False
+    special_index = float('-inf')
 
     for i in range(N):
         char = remainder[i]
+        if special_index == i:
+            current_arg += char
+            continue
         if char == '"':
             in_double_quote ^= 1
             continue
@@ -56,6 +60,12 @@ def read_command():
                 args.append(current_arg)
                 current_arg = ''
             continue
+        if char == '\\':
+            if in_double_quote or in_quote:
+                continue
+            special_index = i + 1
+            continue
+
         current_arg += char
 
     if current_arg:
