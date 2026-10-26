@@ -86,12 +86,13 @@ def get_output_files(args, stack: contextlib.ExitStack):
 
     while arg_index < len(args):
         arg = args[arg_index]
-        if arg in ('>', '1>', '2>'):
+        if arg in ('>', '1>', '2>', '>>', '1>>', '2>>'):
             if arg_index + 1 >= len(args):
                 raise ValueError('Missing arg. target!')
 
-            file = stack.enter_context(open(args[arg_index + 1], 'w'))
-            if arg == '2>': stderr = file
+            mode = 'w' if arg in ('>', '1>', '2>') else 'a'
+            file = stack.enter_context(open(args[arg_index + 1], mode))
+            if arg in ('2>', '2>>'): stderr = file
             else: stdout = file
 
             arg_index += 2
