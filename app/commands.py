@@ -96,4 +96,4 @@ def complete_command(prefix):
             return current_node.words[0]
 
     # TODO: more than one match
-    return ''
+    raise ValueError('Does not exist')

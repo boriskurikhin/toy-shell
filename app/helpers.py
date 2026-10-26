@@ -22,13 +22,16 @@ def process_input(autocomplete_fn):
 
                 if (tokens := line.split()):
                     prefix = tokens[-1]
-                    suffix = autocomplete_fn(prefix)[len(prefix):]
+                    try:
+                        suffix = autocomplete_fn(prefix)[len(prefix):]
+                        if suffix:
+                            suffix += ' '
+                        buffer.extend(suffix)
+                        sys.stdout.write(suffix)
+                    except ValueError:
+                        buffer.extend('\x07')
+                        sys.stdout.write('\x07')
 
-                    if suffix:
-                        suffix += ' '
-
-                    buffer.extend(suffix)
-                    sys.stdout.write(suffix)
                     sys.stdout.flush()
             elif ch in ('\n', '\r'):
                 sys.stdout.write('\n')
