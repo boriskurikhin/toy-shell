@@ -24,6 +24,11 @@ class CommandEcho(Command):
     def __call__(self, to_echo):
         sys_out(to_echo)
 
+class CommandPwd(Command):
+    name = "pwd"
+    def __call__(self, *args, **kwds):
+        sys_out(os.getcwd())
+
 class CommandExit(Command):
     name = "exit"
     def __call__(self, *args, **kwds):
@@ -57,7 +62,8 @@ class CommandType(Command):
 ALL_COMMANDS = [
     CommandExit(),
     CommandEcho(),
-    CommandType()
+    CommandType(),
+    CommandPwd()
 ]
 
 BUILTIN_COMMANDS = {cmd.name: cmd for cmd in ALL_COMMANDS}
