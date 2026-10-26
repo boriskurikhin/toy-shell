@@ -29,7 +29,7 @@ def process_input(autocomplete_fn):
                         buffer.extend(suffix)
                         sys.stdout.write(suffix)
                     except ValueError:
-                        buffer.extend('\x07')
+                        # buffer.extend('\x07')
                         sys.stdout.write('\x07')
 
                     sys.stdout.flush()
@@ -51,17 +51,24 @@ def process_input(autocomplete_fn):
 class ComamndNotFound(Exception):
     pass
 
-def find_command_in_path(cmd, access=os.X_OK):
+def list_programs_in_path(access=os.X_OK):
     path = os.environ.get('PATH', '')
     dirs_to_check = [
         d for d in path.split(':') 
         if Path(d).exists() and Path(d).is_dir()
     ]
+    programs = {}
     for dir in dirs_to_check:
-        for file_name in (files_in_dir := os.listdir(dir)):
+        for file_name in os.listdir(dir):
             full_path = os.path.join(dir, file_name)
-            if os.access(full_path, access) and file_name == cmd:
-                return full_path
+            if os.access(full_path, access) and file_name not in programs:
+                programs[file_name] = full_path
+    return programs
+
+def find_command_in_path(cmd, access=os.X_OK):
+    programs = list_programs_in_path(access)
+    if cmd in programs:
+        return programs[cmd]
     raise ComamndNotFound
 
 def read_command(autocomplete_fn):

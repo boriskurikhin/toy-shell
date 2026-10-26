@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from .helpers import ComamndNotFound, find_command_in_path
+from .helpers import ComamndNotFound, find_command_in_path, list_programs_in_path
 
 class AutoCompleteNode:
     def __init__(self):
@@ -73,11 +73,9 @@ class CommandType(Command):
             stderr.write(f'{cmd}: not found\n')
 
 ALL_COMMANDS = [CommandExit(), CommandEcho(), CommandType(), CommandPwd(), CommandCd()]
-BUILTIN_COMMANDS, AUTO_COMPLETE = {}, AutoCompleteNode()
+BUILTIN_COMMANDS, AUTO_COMPLETE = {c.name: c for c in ALL_COMMANDS}, AutoCompleteNode()
 
-for cmd in ALL_COMMANDS:
-    cmd_name = cmd.name
-    BUILTIN_COMMANDS[cmd_name] = cmd
+for cmd_name in set(BUILTIN_COMMANDS.keys()).union(list_programs_in_path().keys()):
     current_node = AUTO_COMPLETE
 
     for char in cmd_name:
