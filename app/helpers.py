@@ -45,6 +45,9 @@ def read_command():
             current_arg += char
             continue
         if char == '"':
+            if in_quote:
+                current_arg += char
+                continue
             in_double_quote ^= 1
             continue
         if char == "'":
@@ -61,7 +64,11 @@ def read_command():
                 current_arg = ''
             continue
         if char == '\\':
-            if in_double_quote or in_quote:
+            # TODO: impl
+            if in_double_quote:
+                continue
+            if in_quote:
+                current_arg += char
                 continue
             special_index = i + 1
             continue
