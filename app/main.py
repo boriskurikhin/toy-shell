@@ -1,8 +1,4 @@
-import os
-from pathlib import Path
-import sys
-
-from app.commands import ALL_COMMANDS, sys_in, sys_out
+from commands import ALL_COMMANDS, CommandExec, sys_in, sys_out
 
 
 def read_command():
@@ -12,19 +8,27 @@ def read_command():
     return command, line[len(command) + 1:]
 
 def run_main_loop():
+    exec_cmd = CommandExec()
+
     while 1:
         sys_out("$ ", False)
-        cmd, args = read_command()
+        cmd_name, args = read_command()
         command_found = False
 
         for cmd in ALL_COMMANDS:
-            if cmd == cmd.name:
+            if cmd_name == cmd.name:
                 command_found = True
                 cmd(args)
                 break
 
-        if not command_found:
-            sys_out(f'{cmd}: command not found')
+        if command_found:
+            continue
+
+        try:
+            exec_cmd(cmd_name, args)
+            continue
+        except:
+            sys_out(f'{cmd_name}: command not found')
 
 
 def main():
