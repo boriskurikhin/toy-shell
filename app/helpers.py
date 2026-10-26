@@ -36,14 +36,21 @@ def read_command():
     args = []
     current_arg = ""
     in_quote = False
+    in_double_quote = False
 
     for i in range(N):
         char = remainder[i]
+        if char == '"':
+            in_double_quote ^= 1
+            continue
         if char == "'":
+            if in_double_quote:
+                current_arg += char
+                continue
             in_quote ^= 1
             continue
         if char == ' ':
-            if in_quote:
+            if in_double_quote or in_quote:
                 current_arg += char
             elif current_arg:
                 args.append(current_arg)
