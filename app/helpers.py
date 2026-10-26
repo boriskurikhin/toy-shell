@@ -27,7 +27,7 @@ def process_input(autocomplete_fn):
                     prefix = tokens[-1]
 
                     try:
-                        matches = autocomplete_fn(prefix)
+                        matches, suggest_first = autocomplete_fn(prefix)
                         num_matches = len(matches)
 
                         if num_matches == 1:
@@ -37,7 +37,13 @@ def process_input(autocomplete_fn):
                             buffer.extend(suffix)
                             sys.stdout.write(suffix)
                         elif tab_count == 1:
-                            raise ValueError
+                            if not suggest_first:
+                                raise ValueError
+
+                            suffix = f'{matches[0][len(prefix):]}'
+                            buffer.extend(suffix)
+                            sys.stdout.write(suffix)
+                            tab_count = 0
                         else:
                             sys.stdout.write(f'\n{" ".join(matches)}\n$ {"".join(buffer)}')
 

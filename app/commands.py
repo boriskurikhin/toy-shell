@@ -91,9 +91,22 @@ def complete_command(prefix):
         if not current_node:
             raise ValueError('No results found')
         if len(current_node.words) == 1:
-            return [current_node.words[0]]
+            return [current_node.words[0]], False
 
-    if not current_node.words:
-        raise ValueError('No results found')
+    while (
+        current_node 
+        and len(current_node.words) > 1
+        and (keys := list(current_node.children.keys()))
+        and len(keys) == 1
+        and len(current_node.words) == len(current_node.children[keys[0]].words)
+    ):
+        current_node = current_node.children[keys[0]]
 
-    return sorted(current_node.words)
+    if not current_node:
+        raise ValueError('Not results found')
+
+    if len(current_node.words) == 1:
+        return current_node.words, False
+
+    sorted_words = sorted(current_node.words)
+    return sorted_words, len(current_node.children.keys()) == 1
