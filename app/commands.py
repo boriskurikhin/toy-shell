@@ -29,6 +29,15 @@ class CommandPwd(Command):
     def __call__(self, *args, **kwds):
         sys_out(os.getcwd())
 
+class CommandCd(Command):
+    name = "cd"
+    def __call__(self, new_dir):
+        try:
+            os.chdir(new_dir)
+        except:
+            sys_out(f'{self.name}: {new_dir}: No such file or directory')
+            pass
+
 class CommandExit(Command):
     name = "exit"
     def __call__(self, *args, **kwds):
@@ -63,7 +72,8 @@ ALL_COMMANDS = [
     CommandExit(),
     CommandEcho(),
     CommandType(),
-    CommandPwd()
+    CommandPwd(),
+    CommandCd()
 ]
 
 BUILTIN_COMMANDS = {cmd.name: cmd for cmd in ALL_COMMANDS}
