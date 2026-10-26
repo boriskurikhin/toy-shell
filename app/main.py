@@ -25,7 +25,6 @@ def run_main_loop():
 
         try:
             exec_cmd(cmd_name, args)
-            continue
         except:
             sys_out(f'{cmd_name}: command not found')
 

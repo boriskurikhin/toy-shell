@@ -33,9 +33,12 @@ class CommandExec(Command):
     name = "__internal_exec__"
 
     def __call__(self, cmd, args):
-        command_args = args.split()
         cmd_path = find_command_in_path(cmd)
-        subprocess.run([cmd_path, cmd] + command_args)
+        result = subprocess.run(
+            [cmd] + args.split(),
+            stdout=sys.stdout,
+            stderr=sys.stderr
+        )
 
 class CommandType(Command):
     name = "type"
