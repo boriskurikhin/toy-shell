@@ -45,6 +45,29 @@ class AutoCompleter:
                 all_files.add(relative + '/')
         return cwd, all_files
 
+    def _common_prefix_helper(self, matches, length):
+        prefix = matches[0][:length]
+        for i in range(1, len(matches)):
+            if not matches[i].startswith(prefix):
+                return False
+        return True
+
+    def _common_prefix(self, matches):
+        if not matches:
+            return ""
+
+        left, right = 0, min(len(match) for match in matches) + 1
+        ans = 0
+        
+        while left < right:
+            mid = (left + right) // 2
+            if self._common_prefix_helper(matches, mid):
+                left = mid + 1
+            else:
+                right = mid
+
+        return matches[0][:left - 1]
+
     def complete(self, prefix, is_file_autocomplete):
         current_node = self.cmd_root
         prefix_extension = ''
@@ -77,7 +100,8 @@ class AutoCompleter:
         if not matches:
             raise ValueError('No results found')
 
-        return sorted(matches), os.path.commonprefix(matches)
+        # find common prefix
+        return sorted(matches), self._common_prefix(matches)
 
 class Command(ABC):
     name: str
