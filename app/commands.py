@@ -21,6 +21,8 @@ class AutoCompleter:
         self._build_trie(self.cmd_root, options)
 
     def _build_trie(self, root, options: set[str]):
+        root.words.extend(options)
+
         for option_name in options:
             current_node = root
             for char in option_name:
@@ -31,12 +33,17 @@ class AutoCompleter:
 
     def _files(self):
         cwd = os.getcwd()
-        all_files = []
+        all_files = set()
         for root, dirs, files in os.walk(cwd):
             for file in files:
-                full_path = os.path.join(root, file)
-                all_files.append(full_path[len(cwd):].lstrip('/'))
-        return cwd, set(all_files)
+                path = os.path.join(root, file)
+                relative = os.path.relpath(path, cwd)
+                all_files.add(relative)
+            for dir in dirs:
+                path = os.path.join(root, dir)
+                relative = os.path.relpath(path, cwd)
+                all_files.add(relative + '/')
+        return cwd, all_files
 
     def complete(self, prefix, is_file_autocomplete):
         current_node = self.cmd_root
@@ -63,20 +70,14 @@ class AutoCompleter:
         if not current_node.words:
             raise ValueError('No results found')
 
-        if len(current_node.words) == 1:
-            return [current_node.words[0]], prefix
+        matches = current_node.words
+        if is_file_autocomplete and prefix.endswith('/'):
+            matches = [w for w in matches if w != prefix]
 
-        while (
-            len(current_node.children) == 1
-            and (child := next(iter(current_node.children.values())))
-            and len(current_node.words) == len(child.words)
-            and (child_key := next(iter(current_node.children.keys())))
-        ):
-            current_node = child
-            prefix_extension += child_key
+        if not matches:
+            raise ValueError('No results found')
 
-        sorted_words = sorted(current_node.words)
-        return sorted_words, f'{prefix}{prefix_extension}'
+        return sorted(matches), os.path.commonprefix(matches)
 
 class Command(ABC):
     name: str

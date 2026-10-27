@@ -81,8 +81,10 @@ def process_input(autocompleter):
                 tab_count += 1
 
                 if (args := process_args(buffer)):
-                    is_file_autocomplete = len(args) > 1
-                    prefix = args[-1]
+                    line = ''.join(buffer)
+                    is_new_arg = line.endswith(' ')
+                    is_file_autocomplete = len(args) > 1 or is_new_arg
+                    prefix = '' if is_new_arg else args[-1]
 
                     try:
                         matches, common_prefix = autocompleter.complete(
@@ -90,7 +92,9 @@ def process_input(autocompleter):
                         num_matches = len(matches)
 
                         if num_matches == 1:
-                            suffix = matches[0][len(prefix):] + ' '
+                            suffix = matches[0][len(prefix):]
+                            if not (is_file_autocomplete and matches[0].endswith('/')):
+                                suffix += ' '
                             buffer.extend(suffix)
                             sys.stdout.write(suffix)
                             tab_count = 0
