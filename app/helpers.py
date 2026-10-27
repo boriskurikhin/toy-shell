@@ -85,29 +85,29 @@ def process_input(autocompleter):
                     prefix = args[-1]
 
                     try:
-                        matches, suggest_first = autocompleter.complete(
-                            prefix, 
-                            is_file_autocomplete
-                        )
+                        matches, common_prefix = autocompleter.complete(
+                            prefix, is_file_autocomplete)
                         num_matches = len(matches)
 
                         if num_matches == 1:
-                            single_match = matches[0]
-                            suffix = f'{single_match[len(prefix):]} '
-
-                            buffer.extend(suffix)
-                            sys.stdout.write(suffix)
-                        elif tab_count == 1:
-                            if not suggest_first:
-                                raise ValueError
-
-                            suffix = f'{matches[0][len(prefix):]}'
+                            suffix = matches[0][len(prefix):] + ' '
                             buffer.extend(suffix)
                             sys.stdout.write(suffix)
                             tab_count = 0
-                        else:
-                            sys.stdout.write(f'\n{" ".join(matches)}\n$ {"".join(buffer)}')
 
+                        else:
+                            if len(common_prefix) > len(prefix):
+                                suffix = common_prefix[len(prefix):]
+                                buffer.extend(suffix)
+                                sys.stdout.write(suffix)
+
+                                tab_count = 1
+                            elif tab_count == 1:
+                                sys.stdout.write('\x07')
+                            else:
+                                sys.stdout.write(
+                                    f'\n{" ".join(matches)}\n$ {"".join(buffer)}'
+                                )
                     except ValueError:
                         sys.stdout.write('\x07')
 
@@ -115,15 +115,18 @@ def process_input(autocompleter):
                 sys.stdout.write('\n')
                 return process_args(buffer)
             elif ch in ('\x7f', '\b'):
+                tab_count = 0
                 if buffer:
                     buffer.pop()
                     sys.stdout.write('\b \b')
             elif ch.isprintable():
+                tab_count = 0
                 buffer.append(ch)
                 sys.stdout.write(ch)
             sys.stdout.flush()
     finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        termios.tcsetattr(
+            fd, termios.TCSADRAIN, old_settings)
 
 class ComamndNotFound(Exception):
     pass

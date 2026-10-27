@@ -39,9 +39,14 @@ class AutoCompleter:
         return cwd, set(all_files)
 
     def complete(self, prefix, is_file_autocomplete):
+        current_node = self.cmd_root
+        prefix_extension = ''
+
         if is_file_autocomplete:
             cwd, files = self._files()
-            file_hash = hashlib.sha1(functools.reduce(lambda a, b: f'{a}#{b}', files, '').encode()).hexdigest()
+            file_hash = hashlib.sha1(
+                '\0'.join(sorted(files)).encode()
+            ).hexdigest()
 
             if self.dir_hashes.get(cwd) != file_hash:
                 self.file_roots[cwd] = AutoCompleteNode()
@@ -49,32 +54,29 @@ class AutoCompleter:
                 self._build_trie(self.file_roots[cwd], files)
 
             current_node = self.file_roots[cwd]
-        else:
-            current_node = self.cmd_root
 
         for c in prefix:
             current_node = current_node.children.get(c, None)
             if not current_node:
                 raise ValueError('No results found')
-            if len(current_node.words) == 1:
-                return [current_node.words[0]], False
-        while (
-            current_node 
-            and len(current_node.words) > 1
-            and (keys := list(current_node.children.keys()))
-            and len(keys) == 1
-            and len(current_node.words) == len(current_node.children[keys[0]].words)
-        ):
-            current_node = current_node.children[keys[0]]
-    
-        if not current_node:
-            raise ValueError('Not results found')
-    
+
+        if not current_node.words:
+            raise ValueError('No results found')
+
         if len(current_node.words) == 1:
-            return current_node.words, False
-    
+            return [current_node.words[0]], prefix
+
+        while (
+            len(current_node.children) == 1
+            and (child := next(iter(current_node.children.values())))
+            and len(current_node.words) == len(child.words)
+            and (child_key := next(iter(current_node.children.keys())))
+        ):
+            current_node = child
+            prefix_extension += child_key
+
         sorted_words = sorted(current_node.words)
-        return sorted_words, len(current_node.children.keys()) == 1
+        return sorted_words, f'{prefix}{prefix_extension}'
 
 class Command(ABC):
     name: str
