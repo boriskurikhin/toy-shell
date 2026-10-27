@@ -57,7 +57,6 @@ class AutoCompleter:
             return ""
 
         left, right = 0, min(len(match) for match in matches) + 1
-        ans = 0
         
         while left < right:
             mid = (left + right) // 2
@@ -122,6 +121,12 @@ class CommandPwd(Command):
     def __call__(self, args, *, stdout, stderr):
         stdout.write(os.getcwd() + '\n')
 
+class CommandComplete(Command):
+    name = "complete"
+
+    def __call__(self, *args, **kwds):
+        pass
+
 class CommandCd(Command):
     name = "cd"
 
@@ -164,5 +169,5 @@ class CommandType(Command):
         except ComamndNotFound:
             stderr.write(f'{cmd}: not found\n')
 
-ALL_COMMANDS = [CommandExit(), CommandEcho(), CommandType(), CommandPwd(), CommandCd()]
+ALL_COMMANDS = [CommandExit(), CommandEcho(), CommandType(), CommandPwd(), CommandCd(), CommandComplete()]
 BUILTIN_COMMANDS = {c.name: c for c in ALL_COMMANDS}
