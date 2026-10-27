@@ -1,8 +1,10 @@
 from contextlib import ExitStack
 import sys
 
-from .helpers import get_output_files, read_command
-from .commands import ALL_COMMANDS, CommandExec, complete_command
+from .helpers import get_output_files, list_programs_in_path, read_command
+from .commands import ALL_COMMANDS, BUILTIN_COMMANDS, AutoCompleter, CommandExec
+
+CMD_AUTOCOMPLETE = AutoCompleter(set(BUILTIN_COMMANDS.keys()).union(list_programs_in_path().keys()))
 
 def run_main_loop():
     exec_cmd = CommandExec()
@@ -11,7 +13,7 @@ def run_main_loop():
         sys.stdout.write("$ ")
         sys.stdout.flush()
 
-        cmd_name, args = read_command(complete_command)
+        cmd_name, args = read_command(CMD_AUTOCOMPLETE)
 
         if not cmd_name:
             continue

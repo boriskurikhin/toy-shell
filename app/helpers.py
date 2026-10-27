@@ -6,89 +6,8 @@ import contextlib
 import termios
 import tty
 
-def process_input(autocomplete_fn):
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-
-    buffer = []
-    tab_count = 0
-
-    try:
-        # disables echo
-        tty.setcbreak(fd)
-
-        while 1:
-            ch = sys.stdin.read(1)
-            if ch == '\t':
-                tab_count += 1
-                line = ''.join(buffer)
-
-                if (tokens := line.split()):
-                    prefix = tokens[-1]
-
-                    try:
-                        matches, suggest_first = autocomplete_fn(prefix)
-                        num_matches = len(matches)
-
-                        if num_matches == 1:
-                            single_match = matches[0]
-                            suffix = f'{single_match[len(prefix):]} '
-
-                            buffer.extend(suffix)
-                            sys.stdout.write(suffix)
-                        elif tab_count == 1:
-                            if not suggest_first:
-                                raise ValueError
-
-                            suffix = f'{matches[0][len(prefix):]}'
-                            buffer.extend(suffix)
-                            sys.stdout.write(suffix)
-                            tab_count = 0
-                        else:
-                            sys.stdout.write(f'\n{" ".join(matches)}\n$ {"".join(buffer)}')
-
-                    except ValueError:
-                        sys.stdout.write('\x07')
-
-            elif ch in ('\n', '\r'):
-                sys.stdout.write('\n')
-                return ''.join(buffer)
-            elif ch in ('\x7f', '\b'):
-                if buffer:
-                    buffer.pop()
-                    sys.stdout.write('\b \b')
-            elif ch.isprintable():
-                buffer.append(ch)
-                sys.stdout.write(ch)
-            sys.stdout.flush()
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-
-class ComamndNotFound(Exception):
-    pass
-
-def list_programs_in_path(access=os.X_OK):
-    path = os.environ.get('PATH', '')
-    dirs_to_check = [
-        d for d in path.split(':') 
-        if Path(d).exists() and Path(d).is_dir()
-    ]
-    programs = {}
-    for dir in dirs_to_check:
-        for file_name in os.listdir(dir):
-            full_path = os.path.join(dir, file_name)
-            if os.access(full_path, access) and file_name not in programs:
-                programs[file_name] = full_path
-    return programs
-
-def find_command_in_path(cmd, access=os.X_OK):
-    programs = list_programs_in_path(access)
-    if cmd in programs:
-        return programs[cmd]
-    raise ComamndNotFound
-
-def read_command(autocomplete_fn):
-    line = process_input(autocomplete_fn)
+def process_args(buf) -> list[str]:
+    line = ''.join(buf)
 
     args = []
     current_arg = ""
@@ -140,8 +59,99 @@ def read_command(autocomplete_fn):
         args.append(current_arg)
 
     if not args:
-        return None, []
+        return []
 
+    # TODO: don't check if the quote is closed
+    return args
+
+def process_input(autocompleter):
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+
+    buffer = []
+    tab_count = 0
+
+    try:
+        # disables echo
+        tty.setcbreak(fd)
+
+        while 1:
+            ch = sys.stdin.read(1)
+            if ch == '\t':
+                tab_count += 1
+
+                if (args := process_args(buffer)):
+                    is_file_autocomplete = len(args) > 1
+                    prefix = args[-1]
+
+                    try:
+                        matches, suggest_first = autocompleter.complete(
+                            prefix, 
+                            is_file_autocomplete
+                        )
+                        num_matches = len(matches)
+
+                        if num_matches == 1:
+                            single_match = matches[0]
+                            suffix = f'{single_match[len(prefix):]} '
+
+                            buffer.extend(suffix)
+                            sys.stdout.write(suffix)
+                        elif tab_count == 1:
+                            if not suggest_first:
+                                raise ValueError
+
+                            suffix = f'{matches[0][len(prefix):]}'
+                            buffer.extend(suffix)
+                            sys.stdout.write(suffix)
+                            tab_count = 0
+                        else:
+                            sys.stdout.write(f'\n{" ".join(matches)}\n$ {"".join(buffer)}')
+
+                    except ValueError:
+                        sys.stdout.write('\x07')
+
+            elif ch in ('\n', '\r'):
+                sys.stdout.write('\n')
+                return process_args(buffer)
+            elif ch in ('\x7f', '\b'):
+                if buffer:
+                    buffer.pop()
+                    sys.stdout.write('\b \b')
+            elif ch.isprintable():
+                buffer.append(ch)
+                sys.stdout.write(ch)
+            sys.stdout.flush()
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+class ComamndNotFound(Exception):
+    pass
+
+def list_programs_in_path(access=os.X_OK):
+    path = os.environ.get('PATH', '')
+    dirs_to_check = [
+        d for d in path.split(':') 
+        if Path(d).exists() and Path(d).is_dir()
+    ]
+    programs = {}
+    for dir in dirs_to_check:
+        for file_name in os.listdir(dir):
+            full_path = os.path.join(dir, file_name)
+            if os.access(full_path, access) and file_name not in programs:
+                programs[file_name] = full_path
+    return programs
+
+def find_command_in_path(cmd, access=os.X_OK):
+    programs = list_programs_in_path(access)
+    if cmd in programs:
+        return programs[cmd]
+    raise ComamndNotFound
+
+def read_command(autocompleter):
+    args = process_input(autocompleter)
+    if not args:
+        return None, []
     # TODO: don't check if the quote is closed
     return args[0], args[1:]
 
