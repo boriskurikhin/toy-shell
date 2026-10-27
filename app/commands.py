@@ -29,10 +29,18 @@ class AutoCompleter:
                 current_node = current_node.children[char]
                 current_node.words.append(option_name)
 
+    def _files(self):
+        cwd = os.getcwd()
+        all_files = []
+        for root, dirs, files in os.walk(cwd):
+            for file in files:
+                full_path = os.path.join(root, file)
+                all_files.append(full_path[len(cwd):].lstrip('/'))
+        return cwd, set(all_files)
+
     def complete(self, prefix, is_file_autocomplete):
         if is_file_autocomplete:
-            cwd = os.getcwd()
-            files = {file for file in os.listdir(cwd)}
+            cwd, files = self._files()
             file_hash = hashlib.sha1(functools.reduce(lambda a, b: f'{a}#{b}', files, '').encode()).hexdigest()
 
             if self.dir_hashes.get(cwd) != file_hash:
