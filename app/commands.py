@@ -109,6 +109,20 @@ class Command(ABC):
     def __call__(self, *args, **kwds):
         pass
 
+    def consume_args(self, args, flag, num_args):
+        consume_index = -1
+        for i, arg in enumerate(args):
+            if arg == flag:
+                consume_index = i
+                break
+        if consume_index == -1:
+            return
+
+        if consume_index + num_args <= len(args):
+            return args[consume_index + 1 : consume_index + 1 + num_args]
+
+        raise ValueError('Missing Arguments!')
+
 class CommandEcho(Command):
     name = "echo"
 
@@ -124,8 +138,9 @@ class CommandPwd(Command):
 class CommandComplete(Command):
     name = "complete"
 
-    def __call__(self, *args, **kwds):
-        pass
+    def __call__(self, args, *, stdout, stderr):
+        if (p_args := self.consume_args(args, '-p', 1)):
+            stderr.write(f'{self.name}: {p_args[0]}: no completion specification\n')
 
 class CommandCd(Command):
     name = "cd"
