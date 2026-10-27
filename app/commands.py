@@ -8,6 +8,8 @@ import sys
 
 from .helpers import ComamndNotFound, find_command_in_path
 
+REGISTERED_AUTOCOMPLETIONS = {}
+
 class AutoCompleteNode:
     def __init__(self):
         self.words = []
@@ -109,19 +111,24 @@ class Command(ABC):
     def __call__(self, *args, **kwds):
         pass
 
-    def consume_args(self, args, flag, num_args):
-        consume_index = -1
-        for i, arg in enumerate(args):
-            if arg == flag:
-                consume_index = i
-                break
-        if consume_index == -1:
-            return
+    def consume_args(self, args):
+        arg_mapping = {}
+        current_flag = None
+        current_args = []
 
-        if consume_index + num_args <= len(args):
-            return args[consume_index + 1 : consume_index + 1 + num_args]
+        for arg in args:
+            if arg.startswith('-'):
+                if current_flag:
+                    arg_mapping[current_flag] = current_args
+                current_flag = arg
+                current_args.clear()
+            else:
+                current_args.append(arg)
 
-        raise ValueError('Missing Arguments!')
+        if current_flag:
+            arg_mapping[current_flag] = current_args
+
+        return arg_mapping
 
 class CommandEcho(Command):
     name = "echo"
@@ -139,8 +146,16 @@ class CommandComplete(Command):
     name = "complete"
 
     def __call__(self, args, *, stdout, stderr):
-        if (p_args := self.consume_args(args, '-p', 1)):
-            stderr.write(f'{self.name}: {p_args[0]}: no completion specification\n')
+        arg_map = self.consume_args(args)
+        if '-p' in arg_map:
+            spec = arg_map['-p'][0]
+            if spec in REGISTERED_AUTOCOMPLETIONS:
+                stdout.write(f'{self.name} -C \'{REGISTERED_AUTOCOMPLETIONS[spec]}\' {spec}\n')
+            else:
+                stderr.write(f'{self.name}: {spec}: no completion specification\n')
+        if '-C' in arg_map:
+            path, spec = arg_map['-C']
+            REGISTERED_AUTOCOMPLETIONS[spec] = path
 
 class CommandCd(Command):
     name = "cd"
