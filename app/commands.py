@@ -69,9 +69,14 @@ class AutoCompleter:
 
         return matches[0][:left - 1]
 
-    def complete(self, prefix, is_file_autocomplete):
+    def complete(self, prefix, is_file_autocomplete, prev_arg):
         current_node = self.cmd_root
-        prefix_extension = ''
+
+        if prev_arg in REGISTERED_AUTOCOMPLETIONS:
+            path_to_exec = REGISTERED_AUTOCOMPLETIONS[prev_arg]
+            proc = subprocess.run([path_to_exec], capture_output=True)
+            complete_candidates = proc.stdout.decode().splitlines()
+            return sorted(complete_candidates), prefix
 
         if is_file_autocomplete:
             cwd, files = self._files()
@@ -179,8 +184,6 @@ class CommandExec(Command):
     name = "__internal_exec__"
 
     def __call__(self, args, *, stdout, stderr):
-        cmd_path = find_command_in_path(args[0])
-
         result = subprocess.run(
             args, stdout=stdout, stderr=stderr
         )

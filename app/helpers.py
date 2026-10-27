@@ -88,7 +88,8 @@ def process_input(autocompleter):
 
                     try:
                         matches, common_prefix = autocompleter.complete(
-                            prefix, is_file_autocomplete)
+                            prefix, is_file_autocomplete, args[-1] if is_new_arg else None)
+
                         num_matches = len(matches)
 
                         if num_matches == 1:
