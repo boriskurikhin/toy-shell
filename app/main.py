@@ -14,8 +14,8 @@ def run_main_loop():
     completer = partial(complete, shell=shell)
 
     while True:
-        for job in shell.jobs.reap():
-            print(f'[{job.id}]  {job.status:<24}{job.cmdline}')
+        for _ in shell.jobs.reap():
+            pass
 
         line = read_line(completer)
 

@@ -44,6 +44,16 @@ def pwd(args: list[str], shell: Shell, io: IO) -> int:
     return 0
 
 
+def jobs(args: list[str], shell: Shell, io: IO) -> int:
+    for job in shell.jobs:
+        marker = '+' if job.id == list(shell.jobs._jobs)[-1] else ' '
+        print(
+            f'[{job.id}]{marker}  {job.status:<24}{job.cmdline}', 
+            file=io.stdout
+        )
+    return 0
+
+
 def cd(args: list[str], shell: Shell, io: IO) -> int:
     new_path = os.path.expanduser(args[0] if args else '~')
 
@@ -72,9 +82,6 @@ def type_(args: list[str], shell: Shell, io: IO) -> int:
     return code
 
 
-def jobs(args: list[str], shell: Shell, io: IO) -> int:
-    pass
-
 def complete(args: list[str], shell: Shell, io: IO) -> int:
     match args:
         case ['-C', path, name]:
@@ -93,4 +100,8 @@ def complete(args: list[str], shell: Shell, io: IO) -> int:
             print('complete: usage: complete [-C command] [-p] [-r] [name]', file=io.stderr)
             return 2
 
-BUILTINS = {'echo': echo, 'cd': cd, 'pwd': pwd, 'type': type_, 'exit': exit_, 'complete': complete, 'jobs': jobs}
+BUILTINS = {
+    'echo': echo, 'cd': cd, 'pwd': pwd, 
+    'type': type_, 'exit': exit_, 'complete': complete, 
+    'jobs': jobs
+}

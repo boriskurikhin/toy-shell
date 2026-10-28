@@ -55,3 +55,4 @@ class JobTable:
         for job in finished:
             del self._jobs[job.id]
         return finished
+
