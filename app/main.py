@@ -1,39 +1,30 @@
 from contextlib import ExitStack
+from functools import partial
 import sys
 
-from .helpers import get_output_files, list_programs_in_path, read_command
-from .commands import ALL_COMMANDS, BUILTIN_COMMANDS, AutoCompleter, CommandExec
-
-CMD_AUTOCOMPLETE = AutoCompleter(set(BUILTIN_COMMANDS.keys()).union(list_programs_in_path().keys()))
+from .auto_complete import complete
+from .executor import execute
+from .parser import ParsingError, parse
+from .lexer import TokenizationError, tokenize
+from .terminal import read_line
+from .builtins import Shell
 
 def run_main_loop():
-    exec_cmd = CommandExec()
+    shell = Shell()
+    completer = partial(complete, shell=shell)
 
-    while 1:
-        sys.stdout.write("$ ")
-        sys.stdout.flush()
+    while True:
+        line = read_line(completer)
 
-        cmd_name, args = read_command(CMD_AUTOCOMPLETE)
+        try:
+            tokens = tokenize(line)
+            if (command := parse(tokens)):
+                execute(command, shell)
+        except (TokenizationError, ParsingError) as e: 
+            print(e, file=sys.stderr)
+        except SystemExit:
+            break
 
-        if not cmd_name:
-            continue
-
-        with ExitStack() as stack:
-            stdout, stderr, args = get_output_files(args, stack)
-
-            for cmd in ALL_COMMANDS:
-                if cmd_name == cmd.name:
-                    cmd(args, stdout=stdout, stderr=stderr)
-                    break
-            else:
-                try:
-                    exec_cmd(
-                        [cmd_name] + args,
-                        stdout=stdout,
-                        stderr=stderr
-                    )
-                except:
-                    stderr.write(f'{cmd_name}: command not found\n')
 
 if __name__ == "__main__":
     run_main_loop()
