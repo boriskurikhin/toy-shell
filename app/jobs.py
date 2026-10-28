@@ -68,5 +68,4 @@ class JobTable:
             if job.status == 'Running'
             else job.cmdline.rstrip().removesuffix('&').rstrip()
         )
-        pad_size = 24 - len(job.status)
-        return f'[{job.id}]{self._marker(job.id)}  {job.status}{" " * pad_size}{text}'
+        return f'[{job.id}]{self._marker(job.id)}  {job.status:<24}{text}'
