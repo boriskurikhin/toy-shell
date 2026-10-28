@@ -168,6 +168,10 @@ class CommandComplete(Command):
         if '-C' in arg_map:
             path, spec = arg_map['-C']
             REGISTERED_AUTOCOMPLETIONS[spec] = path
+        if '-r' in arg_map:
+            spec, = arg_map['-r']
+            if spec in REGISTERED_AUTOCOMPLETIONS:
+                del REGISTERED_AUTOCOMPLETIONS[spec]
 
 class CommandCd(Command):
     name = "cd"
