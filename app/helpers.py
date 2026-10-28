@@ -88,7 +88,7 @@ def process_input(autocompleter):
 
                     try:
                         matches, common_prefix = autocompleter.complete(
-                            prefix, is_file_autocomplete, args, is_new_arg)
+                            prefix, is_file_autocomplete, args, is_new_arg, line)
 
                         num_matches = len(matches)
 
