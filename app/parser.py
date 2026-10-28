@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from .lexer import OP_TOKENS, Token
+from .lexer import OP_REDIRECT_TOKENS, Token
 
 
 _REDIRECTS = {
@@ -26,6 +26,7 @@ class Redirect:
 class Command:
     argv: list[str]
     redirects: list[Redirect]
+    background: bool = False
 
     @property
     def name(self):
@@ -37,17 +38,26 @@ def parse(tokens: list[Token]) -> Optional[Command]:
 
     argv: list[str] = []
     redirects: list[Redirect] = []
+    background = False
 
     in_redirect = False
     current_operation = None
 
     for token in tokens:
+        if background:
+            raise ParsingError("Background job indicator must be last")
         if token.type == 'OP':
-            if token.text in OP_TOKENS:
+            if token.text in OP_REDIRECT_TOKENS:
                 if in_redirect:
                     raise ParsingError("Missing argv for operator")
                 in_redirect = True
-            current_operation = token
+                current_operation = token
+            elif token.text == "&":
+                if in_redirect:
+                    raise ParsingError("Parse error near &")                    
+                background = True
+            else:
+                raise ParsingError('Unexpected operator!')
         elif in_redirect:
             fd, is_append = _REDIRECTS[current_operation.text]
             redirects.append(Redirect(fd, token.text, is_append))
@@ -61,5 +71,5 @@ def parse(tokens: list[Token]) -> Optional[Command]:
     if in_redirect:
         raise ParsingError('Redirect missing target')
 
-    return Command(argv, redirects)
+    return Command(argv, redirects, background)
 

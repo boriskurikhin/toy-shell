@@ -14,12 +14,15 @@ def run_main_loop():
     completer = partial(complete, shell=shell)
 
     while True:
+        for job in shell.jobs.reap():
+            print(f'[{job.id}]  {job.status:<24}{job.cmdline}')
+
         line = read_line(completer)
 
         try:
             tokens = tokenize(line)
             if (command := parse(tokens)):
-                execute(command, shell)
+                execute(command, shell, line)
         except (TokenizationError, ParsingError) as e: 
             print(e, file=sys.stderr)
         except SystemExit:

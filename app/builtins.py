@@ -5,6 +5,8 @@ import os
 import shutil
 from typing import NamedTuple, TextIO
 
+from .jobs import JobTable
+
 
 class IO(NamedTuple):
     stdin: TextIO
@@ -29,6 +31,8 @@ def programs_in_path() -> dict[str, str]:
 @dataclass
 class Shell:
     completions: dict[str, str] = field(default_factory=dict)
+    jobs: JobTable = field(default_factory=JobTable)
+
 
 def echo(args: list[str], shell: Shell, io: IO) -> int:
     print(*args, file=io.stdout)
