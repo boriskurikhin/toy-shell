@@ -49,7 +49,6 @@ def execute(cmd: Command, shell: Shell, source_command: str) -> int:
         if (builtin := BUILTINS.get(cmd.name)):
             if not cmd.background:
                 return builtin(cmd.argv[1:], shell, io)
-
             proc = _run_builtin_bg(builtin, cmd, shell, io)
         else:
             io.stdout.flush()
@@ -59,8 +58,7 @@ def execute(cmd: Command, shell: Shell, source_command: str) -> int:
                 proc = subprocess.Popen(
                     cmd.argv, 
                     stdin=null if cmd.background else io.stdin,
-                    stderr=null if cmd.background else io.stderr, 
-                    stdout=null if cmd.background else io.stdout
+                    stderr=io.stderr, stdout=io.stdout
                 )
             except FileNotFoundError:
                 print(f'{cmd.name}: command not found', file=io.stderr)
