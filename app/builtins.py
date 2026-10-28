@@ -46,9 +46,8 @@ def pwd(args: list[str], shell: Shell, io: IO) -> int:
 
 def jobs(args: list[str], shell: Shell, io: IO) -> int:
     for job in shell.jobs:
-        marker = '+' if job.id == list(shell.jobs._jobs)[-1] else ' '
         print(
-            f'[{job.id}]{marker}  {job.status:<24}{job.cmdline}', 
+            f'[{job.id}]{shell.jobs.marker(job.id)}  {job.status:<24}{job.cmdline}', 
             file=io.stdout
         )
     return 0

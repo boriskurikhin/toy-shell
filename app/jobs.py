@@ -56,3 +56,8 @@ class JobTable:
             del self._jobs[job.id]
         return finished
 
+    def marker(self, job_id: int) -> str:
+        ids = list(self._jobs)
+        if ids and job_id == ids[-1]: return '+'
+        if len(ids) > 1 and job_id == ids[-2]: return '-'
+        return ' '
