@@ -50,11 +50,11 @@ class JobTable:
     def __iter__(self):
         return iter(self._jobs.values())
 
-    def reap(self) -> list[Job]:
+    def reap(self) -> None:
         finished = [job for job in self._jobs.values() if job.proc.poll() is not None]
         for job in finished:
             del self._jobs[job.id]
-        return finished
+        return None
 
     def _marker(self, job_id: int) -> str:
         ids = list(self._jobs)

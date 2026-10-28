@@ -14,8 +14,10 @@ def run_main_loop():
     completer = partial(complete, shell=shell)
 
     while True:
-        # for _ in shell.jobs.reap():
-        #     pass
+        for job in [j for j in shell.jobs if j.status == 'Done']:
+            print(shell.jobs.format(job))
+
+        shell.jobs.reap()
 
         line = read_line(completer)
 
