@@ -69,13 +69,14 @@ class AutoCompleter:
 
         return matches[0][:left - 1]
 
-    def complete(self, prefix, is_file_autocomplete, prev_arg):
+    def complete(self, prefix, is_file_autocomplete, args, is_new_arg):
         current_node = self.cmd_root
 
-        if prev_arg in REGISTERED_AUTOCOMPLETIONS:
-            path_to_exec = REGISTERED_AUTOCOMPLETIONS[prev_arg]
-            proc = subprocess.run([path_to_exec], capture_output=True)
-            complete_candidates = proc.stdout.decode().splitlines()
+        if (command := args[0]) in REGISTERED_AUTOCOMPLETIONS:
+            path_to_exec = REGISTERED_AUTOCOMPLETIONS[command]
+            previous = args[-1] if is_new_arg else args[-2]
+            proc = subprocess.run([path_to_exec, command, prefix, previous], capture_output=True, text=True)
+            complete_candidates = proc.stdout.splitlines()
             return sorted(complete_candidates), prefix
 
         if is_file_autocomplete:
