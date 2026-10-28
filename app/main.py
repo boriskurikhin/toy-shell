@@ -14,8 +14,8 @@ def run_main_loop():
     completer = partial(complete, shell=shell)
 
     while True:
-        for _ in shell.jobs.reap():
-            pass
+        # for _ in shell.jobs.reap():
+        #     pass
 
         line = read_line(completer)
 

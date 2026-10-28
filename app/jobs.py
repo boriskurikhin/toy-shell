@@ -56,8 +56,17 @@ class JobTable:
             del self._jobs[job.id]
         return finished
 
-    def marker(self, job_id: int) -> str:
+    def _marker(self, job_id: int) -> str:
         ids = list(self._jobs)
         if ids and job_id == ids[-1]: return '+'
         if len(ids) > 1 and job_id == ids[-2]: return '-'
         return ' '
+
+    def format(self, job: Job) -> str:
+        text = (
+            job.cmdline 
+            if job.status == 'Running'
+            else job.cmdline.rstrip().removesuffix('&').rstrip()
+        )
+        pad_size = 24 - len(job.status)
+        return f'[{job.id}]{self._marker(job.id)}  {job.status}{" " * pad_size}{text}'

@@ -46,10 +46,8 @@ def pwd(args: list[str], shell: Shell, io: IO) -> int:
 
 def jobs(args: list[str], shell: Shell, io: IO) -> int:
     for job in shell.jobs:
-        print(
-            f'[{job.id}]{shell.jobs.marker(job.id)}  {job.status:<24}{job.cmdline}', 
-            file=io.stdout
-        )
+        print(shell.jobs.format(job), file=io.stdout)
+    shell.jobs.reap()
     return 0
 
 
