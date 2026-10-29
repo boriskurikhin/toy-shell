@@ -1,5 +1,7 @@
 from contextlib import ExitStack
 from functools import partial
+import os
+from pathlib import Path
 import sys
 
 from .auto_complete import complete
@@ -12,6 +14,10 @@ from .builtins import Shell
 def run_main_loop():
     shell = Shell()
     completer = partial(complete, shell=shell)
+    histfile = os.environ.get('HISTFILE', '')
+
+    if os.path.exists(histfile):
+        shell.history.read(histfile)
 
     while True:
         for job in [j for j in shell.jobs if j.status != 'Running']:
