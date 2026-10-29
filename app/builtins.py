@@ -93,7 +93,7 @@ def history(args: list[str], shell: Shell, io: IO) -> int:
             offset = max(length - int(last), 0)
             for i, item in enumerate(shell.history[offset:], start=offset + 1):
                 print(f'{i:>5}  {item}', file=io.stdout)
-        case ['-r', path] if Path(path).exists():
+        case ['-r', path]:
             shell.history.read(path)
         case ['-w', path] if Path(path):
             shell.history.write(path)

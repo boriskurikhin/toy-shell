@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+import os
 from pathlib import Path
 from typing import Literal
 
@@ -21,12 +22,18 @@ class History:
     def __getitem__(self, key):
         return self._entries[key]
 
-    def read(self, path: str):
+    def read(self, path: str | None):
+        if path is None or not os.path.exists(path):
+            return
+
         with open(path, 'r') as hf:
             lines = [line.rstrip('\n') for line in hf.readlines()]
             self._entries.extend(lines)
 
-    def write(self, path: str):
+    def write(self, path: str | None):
+        if path is None:
+            return
+
         with open(path, 'w') as hf:
             hf.write('\n'.join(self._entries) + '\n')
 
