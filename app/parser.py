@@ -1,6 +1,5 @@
 
 from dataclasses import dataclass
-from typing import Optional
 
 from .lexer import OP_REDIRECT_TOKENS, Token
 
@@ -26,36 +25,48 @@ class Redirect:
 class Command:
     argv: list[str]
     redirects: list[Redirect]
-    background: bool = False
 
     @property
     def name(self):
         return self.argv[0]
 
-def parse(tokens: list[Token]) -> Optional[Command]:
-    if not tokens:
-        return
 
+@dataclass(frozen=True)
+class Pipeline:
+    commands: list[Command]
+    background: bool = False
+
+
+def parse(tokens: list[Token]) -> Pipeline | None:
+    if not tokens:
+        return None
+
+    commands: list[Command] = []
     argv: list[str] = []
     redirects: list[Redirect] = []
     background = False
 
     in_redirect = False
     current_operation = None
+    command_expected = True
 
     for token in tokens:
         if background:
             raise ParsingError("Background job indicator must be last")
         if token.type == 'OP':
+            if in_redirect:
+                raise ParsingError(f'Parse error near {token}')
             if token.text in OP_REDIRECT_TOKENS:
-                if in_redirect:
-                    raise ParsingError("Missing argv for operator")
                 in_redirect = True
                 current_operation = token
-            elif token.text == "&":
-                if in_redirect:
-                    raise ParsingError("Parse error near &")                    
+            elif token.text == "&":         
                 background = True
+            elif token.text == "|":
+                if command_expected:
+                    raise ParsingError(f'Parse error near {token}')
+                commands.append(Command(argv, redirects))
+                argv, redirects = [], []
+                command_expected = True
             else:
                 raise ParsingError('Unexpected operator!')
         elif in_redirect:
@@ -64,12 +75,15 @@ def parse(tokens: list[Token]) -> Optional[Command]:
             in_redirect = False
         else:
             argv.append(token.text)
+            command_expected = False
 
-    if not argv:
-        raise ParsingError('Empty argv not allowed')
+    if command_expected:
+        raise ParsingError(f'Parse error near \'|\'')
 
     if in_redirect:
         raise ParsingError('Redirect missing target')
 
-    return Command(argv, redirects, background)
+    commands.append(Command(argv, redirects))
+    return Pipeline(commands, background)
+
 

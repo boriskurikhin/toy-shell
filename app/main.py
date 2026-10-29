@@ -14,7 +14,7 @@ def run_main_loop():
     completer = partial(complete, shell=shell)
 
     while True:
-        for job in [j for j in shell.jobs if j.status == 'Done']:
+        for job in [j for j in shell.jobs if j.status != 'Running']:
             print(shell.jobs.format(job))
 
         shell.jobs.reap()
@@ -23,8 +23,8 @@ def run_main_loop():
 
         try:
             tokens = tokenize(line)
-            if (command := parse(tokens)):
-                execute(command, shell, line)
+            if (pipeline := parse(tokens)):
+                execute(pipeline, shell, line)
         except (TokenizationError, ParsingError) as e: 
             print(e, file=sys.stderr)
         except SystemExit:

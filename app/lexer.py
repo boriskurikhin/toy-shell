@@ -13,7 +13,8 @@ class TokenizationError(Exception):
     pass
 
 OP_REDIRECT_TOKENS = {'>', '1>', '2>', '>>', '1>>', '2>>'}
-OP_TOKENS = {*OP_REDIRECT_TOKENS, '&'}
+OP_CONTROL_TOKENS = {'&', '|'}
+OP_TOKENS = {*OP_REDIRECT_TOKENS, *OP_CONTROL_TOKENS}
 _DOUBLE_QUOTE_PATTERN = re.compile(r'["\\\$\`\n]')
 _ANY_CHARACTER_PATTERN = re.compile(r'.')
 
@@ -63,12 +64,12 @@ def tokenize(line: str) -> list[Token]:
             else:
                 in_double_quote ^= 1
                 token_escaped = True
-        elif char == '&':
+        elif char in OP_CONTROL_TOKENS:
             if in_quote or in_double_quote:
                 current_token += char
             else:
                 flush()
-                tokens.append(Token('OP', '&'))
+                tokens.append(Token('OP', char))
         elif char == "'":
             if in_double_quote:
                 current_token += char
