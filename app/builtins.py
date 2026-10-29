@@ -79,6 +79,10 @@ def type_(args: list[str], shell: Shell, io: IO) -> int:
     return code
 
 
+def history(args: list[str], shell: Shell, io: IO) -> int:
+    return 0
+
+
 def complete(args: list[str], shell: Shell, io: IO) -> int:
     match args:
         case ['-C', path, name]:
@@ -100,5 +104,5 @@ def complete(args: list[str], shell: Shell, io: IO) -> int:
 BUILTINS = {
     'echo': echo, 'cd': cd, 'pwd': pwd, 
     'type': type_, 'exit': exit_, 'complete': complete, 
-    'jobs': jobs
+    'jobs': jobs, 'history': history
 }

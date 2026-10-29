@@ -88,7 +88,7 @@ def execute(pipeline: Pipeline, shell: Shell, source_command: str) -> int:
                 else:
                     procs.append(result)
 
-            if stdin is not sys.stdin and not pipeline.background:
+            if i > 0:
                 stdin.close()
 
             if not last:
