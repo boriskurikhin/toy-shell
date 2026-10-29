@@ -81,8 +81,11 @@ def type_(args: list[str], shell: Shell, io: IO) -> int:
 
 
 def history(args: list[str], shell: Shell, io: IO) -> int:
-    for i, item in enumerate(shell.history):
-        print(f'{i + 1:>5}  {item}', file=io.stdout)
+    length = len(shell.history)
+    n = length if not args else int(args[0])
+    offset = length - n
+    for i, item in enumerate(shell.history[offset:]):
+        print(f'{offset + i + 1:>5}  {item}', file=io.stdout)
     return 0
 
 
