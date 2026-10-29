@@ -95,6 +95,8 @@ def history(args: list[str], shell: Shell, io: IO) -> int:
                 print(f'{i:>5}  {item}', file=io.stdout)
         case ['-r', path] if Path(path).exists():
             shell.history.read(path)
+        case ['-w', path]:
+            shell.history.write(path)
         case _:
             code = 1
     return code

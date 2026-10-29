@@ -24,3 +24,6 @@ class History:
             lines = [line.rstrip('\n') for line in hf.readlines()]
             self._entries.extend(lines)
 
+    def write(self, path: Path):
+        with open(path, 'w') as hf:
+            hf.write('\n'.join(self._entries) + '\n')
