@@ -32,6 +32,7 @@ def programs_in_path() -> dict[str, str]:
 class Shell:
     completions: dict[str, str] = field(default_factory=dict)
     jobs: JobTable = field(default_factory=JobTable)
+    history: list[str] = field(default_factory=list)
 
 
 def echo(args: list[str], shell: Shell, io: IO) -> int:
@@ -80,6 +81,8 @@ def type_(args: list[str], shell: Shell, io: IO) -> int:
 
 
 def history(args: list[str], shell: Shell, io: IO) -> int:
+    for i, item in enumerate(shell.history):
+        print(f'{i + 1:>5}  {item}', file=io.stdout)
     return 0
 
 
