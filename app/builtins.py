@@ -2,9 +2,11 @@
 from dataclasses import dataclass, field
 from functools import cache
 import os
+from pathlib import Path
 import shutil
 from typing import NamedTuple, TextIO
 
+from .history import History
 from .jobs import JobTable
 
 
@@ -32,7 +34,7 @@ def programs_in_path() -> dict[str, str]:
 class Shell:
     completions: dict[str, str] = field(default_factory=dict)
     jobs: JobTable = field(default_factory=JobTable)
-    history: list[str] = field(default_factory=list)
+    history: History = field(default_factory=History)
 
 
 def echo(args: list[str], shell: Shell, io: IO) -> int:
@@ -81,17 +83,21 @@ def type_(args: list[str], shell: Shell, io: IO) -> int:
 
 
 def history(args: list[str], shell: Shell, io: IO) -> int:
-    if args and not args[0].isnumeric():
-        print(f'history: {args[0]}: numeric argument required', file=io.stderr)
-        return 2
-
-    length = len(shell.history)
-    n = length if not args else int(args[0])
-    offset = max(length - n, 0)
-    for i, item in enumerate(shell.history[offset:], start=offset + 1):
-        print(f'{i:>5}  {item}', file=io.stdout)
-
-    return 0
+    code = 0
+    match args:
+        case []:
+            for i, item in enumerate(shell.history):
+                print(f'{i:>5}  {item}', file=io.stdout)
+        case [last] if last.isnumeric():
+            length = len(shell.history)
+            offset = max(length - int(last), 0)
+            for i, item in enumerate(shell.history[offset:], start=offset + 1):
+                print(f'{i:>5}  {item}', file=io.stdout)
+        case ['-r', path] if Path(path).exists():
+            shell.history.read(path)
+        case _:
+            code = 1
+    return code
 
 
 def complete(args: list[str], shell: Shell, io: IO) -> int:

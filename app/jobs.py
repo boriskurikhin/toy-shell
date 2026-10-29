@@ -59,11 +59,7 @@ class JobTable:
         return iter(self._jobs.values())
 
     def reap(self) -> None:
-        finished = [
-            job for job 
-            in self._jobs.values() 
-            if job.status != 'Running'
-        ]
+        finished = [job for job in self if job.status != 'Running']
         for job in finished:
             del self._jobs[job.id]
         return None
