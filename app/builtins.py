@@ -2,7 +2,6 @@
 from dataclasses import dataclass, field
 from functools import cache
 import os
-from pathlib import Path
 import shutil
 from typing import NamedTuple, TextIO
 
@@ -81,27 +80,34 @@ def type_(args: list[str], shell: Shell, io: IO) -> int:
             print(f'{arg}: not found', file=io.stderr)
     return code
 
-
 def history(args: list[str], shell: Shell, io: IO) -> int:
-    code = 0
+    commands = {
+        '-r': shell.history.read, 
+        '-w': shell.history.write,
+        '-a': shell.history.append
+    }
     match args:
         case []:
-            for i, item in enumerate(shell.history):
-                print(f'{i:>5}  {item}', file=io.stdout)
-        case [last] if last.isnumeric():
-            length = len(shell.history)
-            offset = max(length - int(last), 0)
-            for i, item in enumerate(shell.history[offset:], start=offset + 1):
-                print(f'{i:>5}  {item}', file=io.stdout)
-        case ['-r', path]:
-            shell.history.read(path)
-        case ['-w', path] if Path(path):
-            shell.history.write(path)
-        case ['-a', path] if Path(path):
-            shell.history.append(path)
+            last_n = len(shell.history)
+        case [arg] if arg.isdigit():
+            last_n = int(arg)
+        case ['-r' | '-w' | '-a' as flag, path]:
+            try:
+                commands[flag](path)
+                return 0
+            except OSError as e:
+                print(f'history: {path}: {e.strerror}', file=io.stderr)
+                return 1
         case _:
-            code = 1
-    return code
+            print('history: numeric argument required', file=io.stderr)
+            return 2
+
+    length = len(shell.history)
+    offset = max(length - last_n, 0)
+    for i, item in enumerate(shell.history[offset:], start=offset + 1):
+        print(f'{i:>5}  {item}', file=io.stdout)
+
+    return 0
 
 
 def complete(args: list[str], shell: Shell, io: IO) -> int:

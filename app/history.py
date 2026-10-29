@@ -1,12 +1,10 @@
 from dataclasses import dataclass, field
 import os
-from pathlib import Path
-from typing import Literal
 
 
 @dataclass
 class History:
-    _entries: list[dict] = field(default_factory=list)
+    _entries: list[str] = field(default_factory=list)
     _appended: int = 0
 
     def add(self, item: str) -> None:
@@ -27,8 +25,8 @@ class History:
             return
 
         with open(path, 'r') as hf:
-            lines = [line.rstrip('\n') for line in hf.readlines()]
-            self._entries.extend(lines)
+            self._entries.extend(line.rstrip('\n') for line in hf)
+            self._appended = len(self)
 
     def write(self, path: str | None):
         if path is None:
@@ -36,8 +34,12 @@ class History:
 
         with open(path, 'w') as hf:
             hf.write('\n'.join(self._entries) + '\n')
+            self._appended = len(self)
 
-    def append(self, path: str):
+    def append(self, path: str | None):
+        if path is None:
+            return
+
         if self._appended < len(self):
             with open(path, 'a') as hf:
                 hf.write('\n'.join(self._entries[self._appended:]) + '\n')

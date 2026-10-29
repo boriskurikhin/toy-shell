@@ -34,7 +34,7 @@ def run_main_loop():
         except SystemExit:
             break
 
-    shell.history.write(histfile)
+    shell.history.append(histfile)
 
 if __name__ == "__main__":
     run_main_loop()
