@@ -5,12 +5,12 @@ import os
 import sys
 import termios
 import tty
-from typing import Callable
+from typing import Callable, Sequence
 
 from .builtins import Shell
 
 
-Completer = Callable[[str, Shell], tuple[str, list[str]]]
+Completer = Callable[[str], tuple[str, list[str]]]
 
 _BELL = '\x07'
 
@@ -24,7 +24,10 @@ def raw_mode(fd: int):
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 
-def read_line(completer: Completer, prompt: str = '$ ') -> str:
+def read_line(completer: Completer, history: Sequence[str] = (), prompt: str = '$ ') -> str:
+    draft: str | None = None
+    cursor = len(history)
+
     with raw_mode(sys.stdin.fileno()):
         print(prompt, end='', flush=True)
 
@@ -34,6 +37,8 @@ def read_line(completer: Completer, prompt: str = '$ ') -> str:
         def write(s: str) -> None:
             print(s, end='', flush=True)
 
+        def write_history(s: str) -> None:
+            write('\r' + '\x1b[K' + prompt + s)
 
         def insert(s: str) -> None:
             buffer.extend(s)
@@ -73,6 +78,26 @@ def read_line(completer: Completer, prompt: str = '$ ') -> str:
                         tab_pressed = True
                     else:
                         write("\n" + " ".join(matches) + "\n" + prompt + ''.join(buffer))
+                case '\x1b':
+                    suf = sys.stdin.read(2)
+                    tab_pressed = False
+
+                    match suf:
+                        case '[A':
+                            if cursor > 0:
+                                cursor -= 1
+                                if draft is None:
+                                    draft = ''.join(buffer)
+                                buffer = list(history[cursor])
+                                write_history(''.join(buffer))
+                        case '[B':
+                            if cursor < len(history):
+                                cursor += 1
+                                if cursor < len(history):
+                                    buffer = list(history[cursor])
+                                else:
+                                    buffer = list(draft)
+                                    draft = None
+                                write_history(''.join(buffer))
                 case _:
-                    # TODO: more cases
                     continue

@@ -19,8 +19,10 @@ def run_main_loop():
 
         shell.jobs.reap()
 
-        line = read_line(completer)
-        shell.history.append(line)
+        line = read_line(completer, shell.history)
+
+        if line.strip():
+            shell.history.append(line)
 
         try:
             tokens = tokenize(line)
