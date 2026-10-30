@@ -69,6 +69,12 @@ def exit_(args: list[str], shell: Shell, io: IO) -> int:
 
 
 def declare(args: list[str], shell: Shell, io: IO) -> int:
+    match args:
+        case ['-p', name]:
+            print(f'declare: {name}: not found', file=io.stderr)
+            return 1
+        case _:
+            pass
     return 0
 
 def type_(args: list[str], shell: Shell, io: IO) -> int:
