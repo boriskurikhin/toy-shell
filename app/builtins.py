@@ -81,11 +81,11 @@ def declare(args: list[str], shell: Shell, io: IO) -> int:
                     print(f'declare: {name}: not found', file=io.stderr)
                     code = 1
             return code
-        case [assignments]:
-            for assignment in assignments:
-                name, sep, v = assignments.partition('=')
+        case [*assignments]:
+            for assn in assignments:
+                name, sep, v = assn.partition('=')
                 if not sep or not name.isidentifier():
-                    print(f"declare: `{assignment}': not a valid identifier", file=io.stderr)
+                    print(f"declare: `{assn}': not a valid identifier", file=io.stderr)
                     return 1
                 shell.declarations[name] = v 
         case _:
