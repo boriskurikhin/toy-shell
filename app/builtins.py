@@ -68,6 +68,9 @@ def exit_(args: list[str], shell: Shell, io: IO) -> int:
     raise SystemExit(int(args[0]) if args else 0)
 
 
+def declare(args: list[str], shell: Shell, io: IO) -> int:
+    return 0
+
 def type_(args: list[str], shell: Shell, io: IO) -> int:
     code = 0
     for arg in args:
@@ -131,5 +134,5 @@ def complete(args: list[str], shell: Shell, io: IO) -> int:
 BUILTINS = {
     'echo': echo, 'cd': cd, 'pwd': pwd, 
     'type': type_, 'exit': exit_, 'complete': complete, 
-    'jobs': jobs, 'history': history
+    'jobs': jobs, 'history': history, 'declare': declare
 }
