@@ -2,6 +2,7 @@
 from dataclasses import dataclass, field
 from functools import cache
 import os
+import re
 import shutil
 from typing import NamedTuple, TextIO
 
@@ -34,6 +35,7 @@ class Shell:
     completions: dict[str, str] = field(default_factory=dict)
     jobs: JobTable = field(default_factory=JobTable)
     history: History = field(default_factory=History)
+    declarations: dict[str, str] = field(default_factory=dict)
 
 
 def echo(args: list[str], shell: Shell, io: IO) -> int:
@@ -70,11 +72,24 @@ def exit_(args: list[str], shell: Shell, io: IO) -> int:
 
 def declare(args: list[str], shell: Shell, io: IO) -> int:
     match args:
-        case ['-p', name]:
-            print(f'declare: {name}: not found', file=io.stderr)
-            return 1
+        case ['-p', *names]:
+            code = 0
+            for name in names:
+                if (value := shell.declarations.get(name)) is not None:
+                    print(f'declare -- {name}="{value}"', file=io.stdout)
+                else:
+                    print(f'declare: {name}: not found', file=io.stderr)
+                    code = 1
+            return code
+        case [assignments]:
+            for assignment in assignments:
+                name, sep, v = assignments.partition('=')
+                if not sep or not name.isidentifier():
+                    print(f"declare: `{assignment}': not a valid identifier", file=io.stderr)
+                    return 1
+                shell.declarations[name] = v 
         case _:
-            pass
+            return 1
     return 0
 
 def type_(args: list[str], shell: Shell, io: IO) -> int:
